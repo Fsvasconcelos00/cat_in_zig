@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const zig_cat_version = "0.0.3";
+const zig_cat_version = "0.0.5";
 
 const option_names = [_][]const u8{
     "--number",
@@ -34,8 +34,6 @@ pub fn main() !void {
     var args = std.process.args();
     var number_option: bool = false;
     var number_nonblank_option: bool = false;
-    var help_option: bool = false;
-    var version_option: bool = false;
 
     // Skip program path (args[0])
     _ = args.next();
@@ -45,27 +43,25 @@ pub fn main() !void {
         return;
     };
 
-    while (args.next()) |arg| {
-        if (match_option(arg)) |id| {
-            switch (id) {
-                0 => number_option = true,
-                1 => number_nonblank_option = true,
-                2 => help_option = true,
-                3 => version_option = true,
-                else => {},
-            }
-        } else {
-            // unknown trailing arg — ignore or handle as needed
-        }
-    }
-
-    if (help_option == true) {
+    if (std.mem.eql(u8, filename, "--help") == true) {
         try help();
         return;
-    } else if (version_option == true) {
+    } else if (std.mem.eql(u8, filename, "--version")) {
         try version();
         return;
     } else {
+        while (args.next()) |arg| {
+            if (match_option(arg)) |id| {
+                switch (id) {
+                    0 => number_option = true,
+                    1 => number_nonblank_option = true,
+                    else => {},
+                }
+            } else {
+                // unknown trailing arg — ignore or handle as needed
+            }
+        }
+
         const file = std.fs.cwd().openFile(filename, .{}) catch |err| {
             std.log.err("Failed to open file: {s}", .{@errorName(err)});
             return;

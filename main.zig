@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const zig_cat_version = "0.0.3";
+
 const option_names = [_][]const u8{
     "--number",
     "--number-nonblank",
@@ -13,6 +15,19 @@ fn match_option(arg: []const u8) ?usize {
         if (std.mem.eql(u8, arg, option_names[i])) return i;
     }
     return null;
+}
+
+fn help() !void {
+    std.debug.print("Usage: cat [filename] [options]\n", .{});
+    std.debug.print("Options:\n", .{});
+    std.debug.print("--number: Adds the line numbers before the line contents\n", .{});
+    std.debug.print("--number-nonblank: Adds the line numbers before the line contents, except for empty lines\n", .{});
+    std.debug.print("--help: Shows this helper\n", .{});
+    std.debug.print("--help: Shows cat in zig version\n", .{});
+}
+
+fn version() !void {
+    std.debug.print("Zig cat is currently on version {s}\n", .{zig_cat_version});
 }
 
 pub fn main() !void {
@@ -30,12 +45,6 @@ pub fn main() !void {
         return;
     };
 
-    const file = std.fs.cwd().openFile(filename, .{}) catch |err| {
-        std.log.err("Failed to open file: {s}", .{@errorName(err)});
-        return;
-    };
-    defer file.close();
-
     while (args.next()) |arg| {
         if (match_option(arg)) |id| {
             switch (id) {
@@ -50,12 +59,33 @@ pub fn main() !void {
         }
     }
 
-    var reader_buf: [4096]u8 = undefined;
-    var file_reader = file.reader(&reader_buf);
-    const ioreader: *std.Io.Reader = &file_reader.interface;
+    if (help_option == true) {
+        try help();
+        return;
+    } else if (version_option == true) {
+        try version();
+        return;
+    } else {
+        const file = std.fs.cwd().openFile(filename, .{}) catch |err| {
+            std.log.err("Failed to open file: {s}", .{@errorName(err)});
+            return;
+        };
+        defer file.close();
 
-    while (true) {
-        const line = ioreader.takeDelimiterInclusive('\n') catch break;
-        std.debug.print("{s}", .{line});
+        var reader_buf: [4096]u8 = undefined;
+        var file_reader = file.reader(&reader_buf);
+        const ioreader: *std.Io.Reader = &file_reader.interface;
+        var line_number: u32 = 0;
+
+        while (true) {
+            const line = ioreader.takeDelimiterInclusive('\n') catch break;
+            if ((number_nonblank_option == true) and (std.mem.eql(u8, line, "\n"))) {
+                // Do not increase line_number
+                std.debug.print("{s}", .{line});
+            } else {
+                line_number += 1;
+                std.debug.print("{} {s}", .{ line_number, line });
+            }
+        }
     }
 }

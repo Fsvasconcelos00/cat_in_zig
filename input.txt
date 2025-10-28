@@ -2,3 +2,6 @@ oi
 
 lula
 lid
+
+takeDelimiterInclusive
+teste

@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const zig_cat_version = "0.0.5";
+const zig_cat_version = "0.1.0";
 
 var number_option: bool = false;
 var number_nonblank_option: bool = false;
@@ -95,12 +95,13 @@ pub fn main() !void {
             return;
         } else if (std.mem.eql(u8, args[1], "-")) {
             try printFromStdin();
+            return;
         } else {
             try printFile(args[1]);
             return;
         }
     } else {
-        for (1..(args.len - 1)) |arg_index| {
+        for (1..(args.len)) |arg_index| {
             if (std.mem.eql(u8, args[arg_index], "--number")) {
                 number_option = true;
             } else if (std.mem.eql(u8, args[arg_index], "--number-nonblank")) {

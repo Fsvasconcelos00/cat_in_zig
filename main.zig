@@ -84,7 +84,7 @@ pub fn main() !void {
     var file_size: u8 = 0;
 
     if (args.len < 2) {
-        try help();
+        try printFromStdin();
         return;
     } else if (args.len == 2) {
         if (std.mem.eql(u8, args[1], "--help")) {
